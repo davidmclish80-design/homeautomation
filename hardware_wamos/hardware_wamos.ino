@@ -1,3 +1,5 @@
+
+
 #include <SoftwareSerial.h>
 // IMPORT ALL REQUIRED LIBRARIES
 
@@ -7,18 +9,18 @@
    
 //**********ENTER IP ADDRESS OF SERVER******************//
 
-#define HOST_IP     "192.168.0.11"       // REPLACE WITH IP ADDRESS OF SERVER ( IP ADDRESS OF COMPUTER THE BACKEND IS RUNNING ON) 
+#define HOST_IP     "172.16.192.66"       // REPLACE WITH IP ADDRESS OF SERVER ( IP ADDRESS OF COMPUTER THE BACKEND IS RUNNING ON) 
 #define HOST_PORT   "8080"               // REPLACE WITH SERVER PORT (BACKEND FLASK API PORT)
 #define route       "api/update"         // LEAVE UNCHANGED 
 #define idNumber    "620171852"          // REPLACE WITH YOUR ID NUMBER 
 
 // WIFI CREDENTIALS
-const char* SSID = "ARRIS-F53D";           // Add your Wi-Fi ssid 
-const char* password = "70DFF79FF53D";     // Add your Wi-Fi password
+//const char* SSID = "ARRIS-F53D";           // Add your Wi-Fi ssid 
+//const char* password = "70DFF79FF53D";     // Add your Wi-Fi password
 //const char* ssid         = "gadfa’s iPhone"; // Add your Wi-Fi ssid
 //const char* password     = "12345678"; // Add your Wi-Fi password 
-//const char* ssid       = "MonaConnect";     // Add your Wi-Fi ssid
-//const char* password   = ""; // Add your Wi-Fi password 
+const char* SSID       = "MonaConnect";     // Add your Wi-Fi ssid
+const char* password   = ""; // Add your Wi-Fi password 
 #define stay        100
  
 //**********PIN DEFINITIONS******************//

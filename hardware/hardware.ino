@@ -3,10 +3,11 @@
 //##                                                                                                              ##
 //##################################################################################################################
 
+
  
 
 // IMPORT ALL REQUIRED LIBRARIES
-#include <rom/rtc.h>
+#include <esp_sleep.h>
 
 
 
@@ -42,19 +43,32 @@
 // IMPORT FONTS FOR TFT DISPLAY
 #include <Fonts/FreeSansBold18pt7b.h>
 #include <Fonts/FreeSansBold9pt7b.h> 
+// tft.setFont(&FreeSansBold18pt7b);
+// tft.setTextColor(ILI9341_RED);
+// tft.setTextSize(1);          // keep 1 for GFX fonts
+// tft.setCursor(10, 60);
+// tft.print("FONT OK");
 
+// tft.setFont(&FreeSansBold9pt7b);
+// tft.setTextColor(ILI9341_BLUE);
+// tft.setCursor(10, 100);
+// tft.print("small font ok");
  
 
 
 // MQTT CLIENT CONFIG  
-static const char* pubtopic      = "620012345";                    // Add your ID number here
-static const char* subtopic[]    = {"620012345_sub","/elet2415"};  // Array of Topics(Strings) to subscribe to
-static const char* mqtt_server   = "address or ip";         // Broker IP address or Domain name as a String 
+static const char* pubtopic      = "620171852";                    // Add your ID number here
+static const char* subtopic[]    = {"620171852_sub","/elet2415"};  // Array of Topics(Strings) to subscribe to
+static const char* mqtt_server   = "www.yanacreations.com";         // Broker IP address or Domain name as a String 
 static uint16_t mqtt_port        = 1883;
 
 // WIFI CREDENTIALS
-const char* ssid       = "YOUR_SSID"; // Add your Wi-Fi ssid
-const char* password   = "YOUR_PASS"; // Add your Wi-Fi password 
+const char* ssid = "ARRIS-F53D";           // Add your Wi-Fi ssid 
+const char* password = "70DFF79FF53D";     // Add your Wi-Fi password
+//const char* ssid         = "gadfa’s iPhone"; // Add your Wi-Fi ssid
+//const char* password     = "12345678"; // Add your Wi-Fi password 
+//const char* ssid       = "MonaConnect";     // Add your Wi-Fi ssid
+//const char* password   = ""; // Add your Wi-Fi password 
 
 
 

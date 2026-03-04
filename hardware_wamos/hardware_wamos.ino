@@ -1,54 +1,98 @@
-
 #include <SoftwareSerial.h>
 // IMPORT ALL REQUIRED LIBRARIES
 
 #include <math.h>
+#include <NewPing.h>
+
    
 //**********ENTER IP ADDRESS OF SERVER******************//
 
-#define HOST_IP     "localhost"       // REPLACE WITH IP ADDRESS OF SERVER ( IP ADDRESS OF COMPUTER THE BACKEND IS RUNNING ON) 
-#define HOST_PORT   "8080"            // REPLACE WITH SERVER PORT (BACKEND FLASK API PORT)
-#define route       "api/update"      // LEAVE UNCHANGED 
-#define idNumber    "620012345"       // REPLACE WITH YOUR ID NUMBER 
+#define HOST_IP     "192.168.0.11"       // REPLACE WITH IP ADDRESS OF SERVER ( IP ADDRESS OF COMPUTER THE BACKEND IS RUNNING ON) 
+#define HOST_PORT   "8080"               // REPLACE WITH SERVER PORT (BACKEND FLASK API PORT)
+#define route       "api/update"         // LEAVE UNCHANGED 
+#define idNumber    "620171852"          // REPLACE WITH YOUR ID NUMBER 
 
 // WIFI CREDENTIALS
-#define SSID        "YOUR WIFI"      // "REPLACE WITH YOUR WIFI's SSID"   
-#define password    "YOUR PASSWORD"  // "REPLACE WITH YOUR WiFi's PASSWORD" 
-
+const char* SSID = "ARRIS-F53D";           // Add your Wi-Fi ssid 
+const char* password = "70DFF79FF53D";     // Add your Wi-Fi password
+//const char* ssid         = "gadfa’s iPhone"; // Add your Wi-Fi ssid
+//const char* password     = "12345678"; // Add your Wi-Fi password 
+//const char* ssid       = "MonaConnect";     // Add your Wi-Fi ssid
+//const char* password   = ""; // Add your Wi-Fi password 
 #define stay        100
  
 //**********PIN DEFINITIONS******************//
 
- 
 #define espRX         10
 #define espTX         11
 #define espTimeout_ms 300
 
- 
+//arduino to sonic boom detector
+#define TRIGGER_PIN 6
+#define ECHO_PIN 7
+#define MAX_DISTANCE 200
+//max distance unit? ==>8cm?
+
+//**********CUP DIMENSIONS******************//
+#define CUP_HEIGHT_CM   8.0
+#define CUP_DIAMETER_CM 7.0
+#define CUP_RADIUS_CM   3.5
  
 /* Declare your functions below */
- 
- 
+float clampFloat(float value, float minVal, float maxVal);
+float getWaterHeight(unsigned int distance);
+float getReserve(float waterheight);
+int getPercentage(float waterheight);
+
+NewPing sonar(TRIGGER_PIN, ECHO_PIN, MAX_DISTANCE); 
 
 SoftwareSerial esp(espRX, espTX); 
- 
+
+//SoftwareSerial espSerial(RX, TX); EXPLANATION IN LINE BELOW: 
+//THIS IS A FUNCTION THAT ALLOWS DATA PINS TO MIMIC SERIAL TRANSMISION PINS, IT TAKES TWO PINS IN THE ORDER SEEN HERE 
 
 void setup(){
 
   Serial.begin(115200); 
   // Configure GPIO pins here
 
- 
-
   espInit();  
  
 }
 
 void loop(){ 
+   unsigned int distance = sonar.ping_cm();
+   //unsigned int distance_in=sonar.ping_in();  
+
+   float waterheight = getWaterHeight(distance);
+   float reserve = getReserve(waterheight);
+   int percentage = getPercentage(waterheight);
+
+   Serial.print(distance);
+   Serial.print(" cm");
+   Serial.print(" | waterheight = ");
+   Serial.print(waterheight);
+   Serial.print(" cm | reserve = ");
+   Serial.print(reserve);
+   Serial.print(" cm^3(ml) | percentage = ");
+   Serial.print(percentage);
+   Serial.println("%");
    
   // send updates with schema ‘{"id": "student_id", "type": "ultrasonic", "radar": 0, "waterheight": 0, "reserve": 0, "percentage": 0}’
+   char payload[200] = {0};
 
+   snprintf(
+      payload,
+      sizeof(payload),
+      "{\"id\":\"%s\",\"type\":\"ultrasonic\",\"radar\":%u,\"waterheight\":%.2f,\"reserve\":%.2f,\"percentage\":%d}",
+      idNumber,
+      distance,
+      waterheight,
+      reserve,
+      percentage
+   );
 
+   espUpdate(payload);
 
   delay(1000);  
 }
@@ -105,5 +149,25 @@ void espInit(){
 }
 
 //***** Design and implement all util functions below ******
- 
 
+float clampFloat(float value, float minVal, float maxVal){
+  if(value < minVal) return minVal;
+  if(value > maxVal) return maxVal;
+  return value;
+}
+
+float getWaterHeight(unsigned int distance){
+  float h = CUP_HEIGHT_CM - distance;
+  return clampFloat(h, 0.0, CUP_HEIGHT_CM);
+}
+
+float getReserve(float waterheight){
+  return 3.14159 * CUP_RADIUS_CM * CUP_RADIUS_CM * waterheight;
+}
+
+int getPercentage(float waterheight){
+  float p = (waterheight / CUP_HEIGHT_CM) * 100.0;
+  if(p < 0) p = 0;
+  if(p > 100) p = 100;
+  return (int)p;
+}

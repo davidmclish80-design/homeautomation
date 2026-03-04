@@ -64,7 +64,6 @@ void setup(){
 
 void loop(){ 
    unsigned int distance = sonar.ping_cm();
-   //unsigned int distance_in=sonar.ping_in();  
 
    float waterheight = getWaterHeight(distance);
    float reserve = getReserve(waterheight);
@@ -80,23 +79,30 @@ void loop(){
    Serial.print(percentage);
    Serial.println("%");
    
-  // send updates with schema ‘{"id": "student_id", "type": "ultrasonic", "radar": 0, "waterheight": 0, "reserve": 0, "percentage": 0}’
-   char payload[200] = {0};
+   char payload[220] = {0};
+   char waterStr[20] = {0};
+   char reserveStr[20] = {0};
+
+   // AVR-safe float conversion
+   dtostrf(waterheight, 0, 2, waterStr);
+   dtostrf(reserve, 0, 2, reserveStr);
 
    snprintf(
       payload,
       sizeof(payload),
-      "{\"id\":\"%s\",\"type\":\"ultrasonic\",\"radar\":%u,\"waterheight\":%.2f,\"reserve\":%.2f,\"percentage\":%d}",
+      "{\"id\":\"%s\",\"type\":\"ultrasonic\",\"radar\":%u,\"waterheight\":%s,\"reserve\":%s,\"percentage\":%d}",
       idNumber,
       distance,
-      waterheight,
-      reserve,
+      waterStr,
+      reserveStr,
       percentage
    );
 
+   Serial.println(payload);
+
    espUpdate(payload);
 
-  delay(1000);  
+   delay(1000);  
 }
 
  

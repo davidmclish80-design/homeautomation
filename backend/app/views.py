@@ -136,31 +136,41 @@ def check_combination():
 @app.route('/api/update', methods=['POST'])
 def update():
     try:
-        payload = parse_update_payload()
+        raw_body = request.get_data(as_text=True)
+        print("RAW BODY REPR:", repr(raw_body))
+
+        if not raw_body or raw_body.strip() == "":
+            return jsonify({"status": "failed", "data": "empty_body"}), 400
+
+        try:
+            payload = loads(raw_body)
+        except Exception as e:
+            print("JSON LOAD ERROR:", e)
+            return jsonify({"status": "failed", "data": "invalid_json"}), 400
+
         print("PARSED PAYLOAD:", payload)
 
-        normalized, error = normalize_update_payload(payload)
-        if error:
-            print("UPDATE NORMALIZATION ERROR:", error)
-            return jsonify({"status": "failed", "data": error}), 400
+        required = {"id", "type", "radar", "waterheight", "reserve", "percentage"}
+        if not isinstance(payload, dict):
+            return jsonify({"status": "failed", "data": "not_dict"}), 400
 
-        modified = dict(normalized)
+        missing = sorted(list(required.difference(set(payload.keys()))))
+        if missing:
+            print("MISSING KEYS:", missing)
+            return jsonify({"status": "failed", "data": "missing_keys", "missing": missing}), 400
+
+        modified = dict(payload)
         modified["timestamp"] = int(time())
 
-        print("FINAL PAYLOAD TO STORE:", modified)
-
-        # 1. INSERT INTO MONGO FIRST
         inserted = mongo.insert_radar(modified)
         print("RADAR INSERT:", inserted)
 
         if not inserted:
             return jsonify({"status": "failed", "data": "db_insert_failed"}), 500
 
-        # 2. MQTT PUBLISH SECOND (best effort only)
         try:
             topic = "elet2415/radar"
             payload_json = dumps(modified)
-            print(f"/api/update MQTT publish -> topic: {topic}, payload_size: {len(payload_json)} bytes")
             published = Mqtt.publish(topic, payload_json)
             print("MQTT publish result:", published)
         except Exception as e:

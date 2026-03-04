@@ -9,6 +9,10 @@
 // IMPORT ALL REQUIRED LIBRARIES
 #include <esp_sleep.h>
 
+#include <SPI.h>
+#include "Adafruit_GFX.h"
+#include "Adafruit_ILI9341.h"
+
 
 
 //IMPORT IMAGES
@@ -36,8 +40,24 @@
 
 
 // DEFINE VARIABLES
+#define TFT_DC    17
+#define TFT_CS    5
+#define TFT_RST   16
+#define TFT_CLK   18
+#define TFT_MOSI  23
+#define TFT_MISO  19
+
+#define button1 32
+#define button2 33
+#define button3 25
+#define AD0     36
 
 
+
+uint8_t currentDigit = 1; // Keeps track of the current digit being modified by the potentiometer
+bool lockState = false; // keeps track of the Open and Close state of the lock
+uint8_t first=0, second=0, third=0, fourth=0; // TO KEEP TRACK OF CURRENT CODE VALUE WHEN BUTTONS AND POTENTIOMETER DO THEIR THING!
+//UNSURE OF THE IMPLEMENTATION OF THE DIGITS....
 
 
 // IMPORT FONTS FOR TFT DISPLAY
@@ -98,6 +118,8 @@ void digit4(uint8_t number);
 void checkPasscode(void);
 void showLockState(void);
 
+
+
  
 
 //############### IMPORT HEADER FILES ##################
@@ -111,23 +133,27 @@ void showLockState(void);
 
 
 /* Initialize class objects*/
-
+Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CS, TFT_DC, TFT_MOSI, TFT_CLK, TFT_RST, TFT_MISO);
 
 
  
  
 /* Declare your functions below */
+void configurePins();
 
 
 
 void setup() {
     Serial.begin(115200);  // INIT SERIAL  
- 
+    tft.begin();
+    tft.fillScreen(ILI9341_WHITE);
   
     
   // CONFIGURE THE ARDUINO PINS OF THE 7SEG AS OUTPUT
  
   /* Configure all others here */
+  configurePins(); // CONFIGURED THE PINS!
+
 
   initialize();           // INIT WIFI, MQTT & NTP 
   vButtonCheckFunction(); // UNCOMMENT IF USING BUTTONS THEN ADD LOGIC FOR INTERFACING WITH BUTTONS IN THE vButtonCheck FUNCTION
@@ -138,6 +164,28 @@ void setup() {
 
 void loop() {
   // put your main code here, to run repeatedly: 
+
+  j=map(analogRead(AD0), 0, 4096, 0, 9);
+
+  switch(currentDigit)
+  {
+    case 1:
+    first=j;
+    break
+
+    case 2:
+    second=j;
+    break
+
+    case 3:
+    third=j;
+    break
+
+    case 4:
+    fourth=j;
+    break
+  }
+
 
  
 
@@ -154,6 +202,23 @@ void vButtonCheck( void * pvParameters )  {
     configASSERT( ( ( uint32_t ) pvParameters ) == 1 );     
       
     for( ;; ) {
+      if (digitalRead(button1)==LOW)
+      {
+        currentDigit++;
+        if(currentDigit>4){currentDigit=1;}
+      }
+
+      if (digitalRead(button2)==LOW)
+      {
+        checkPasscode();
+      }
+
+      if (digitalRead(button3)==LOW)
+      {
+        lockstate=false;
+        showLockState();
+      }
+      
         // Add code here to check if a button(S) is pressed
         // then execute appropriate function if a button is pressed  
 
@@ -227,16 +292,38 @@ bool publish(const char *topic, const char *payload){
   
 void digit1(uint8_t number){
   // CREATE BOX AND WRITE NUMBER IN THE BOX FOR THE FIRST DIGIT
+  ft.setFont(&FreeSansBold18pt7b);
+  tft.fillRoundRect(40,260,30,25,5, ILI9341_BLACK);
+  tft.setCursor(53,265);
+  tft.TextColor(ILI9341_BLUE);
+  tft.setTextSize(1);
+
+
+  tft.print(number);
+
+
   // 1. Set font to FreeSansBold18pt7b 
   // 2. Draw a filled rounded rectangle close to the bottom of the screen. Give it any colour you like 
   // 3. Set cursor to the appropriate coordinates in order to write the number in the middle of the box 
   // 4. Set the text colour of the number. Use any colour you like 
   // 5. Set font size to one 
   // 6. Print number to the screen 
+
 }
  
 void digit2(uint8_t number){
   // CREATE BOX AND WRITE NUMBER IN THE BOX FOR THE SECOND DIGIT
+
+  ft.setFont(&FreeSansBold18pt7b);
+  tft.fillRoundRect(80,260,30,25,5, ILI9341_BLACK);
+  tft.setCursor(93,265);
+  tft.TextColor(ILI9341_BLUE);
+  tft.setTextSize(1);
+
+  tft.print(number);
+
+
+
   // 1. Set font to FreeSansBold18pt7b 
   // 2. Draw a filled rounded rectangle close to the bottom of the screen. Give it any colour you like 
   // 3. Set cursor to the appropriate coordinates in order to write the number in the middle of the box 
@@ -247,6 +334,13 @@ void digit2(uint8_t number){
 
 void digit3(uint8_t number){
   // CREATE BOX AND WRITE NUMBER IN THE BOX FOR THE THIRD DIGIT
+  ft.setFont(&FreeSansBold18pt7b);
+  tft.fillRoundRect(120,260,30,25,5, ILI9341_BLACK);
+  tft.setCursor(133,265);
+  tft.TextColor(ILI9341_BLUE);
+  tft.setTextSize(1);
+
+  tft.print(number);
   // 1. Set font to FreeSansBold18pt7b 
   // 2. Draw a filled rounded rectangle close to the bottom of the screen. Give it any colour you like 
   // 3. Set cursor to the appropriate coordinates in order to write the number in the middle of the box 
@@ -257,6 +351,13 @@ void digit3(uint8_t number){
 
 void digit4(uint8_t number){
   // CREATE BOX AND WRITE NUMBER IN THE BOX FOR THE FOURTH DIGIT
+  ft.setFont(&FreeSansBold18pt7b);
+  tft.fillRoundRect(160,260,30,25,5, ILI9341_BLACK);
+  tft.setCursor(173,265);
+  tft.TextColor(ILI9341_BLUE);
+  tft.setTextSize(1);
+
+  tft.print(number);
   // 1. Set font to FreeSansBold18pt7b 
   // 2. Draw a filled rounded rectangle close to the bottom of the screen. Give it any colour you like 
   // 3. Set cursor to the appropriate coordinates in order to write the number in the middle of the box 
@@ -274,7 +375,7 @@ void checkPasscode(void){
     if(WiFi.status()== WL_CONNECTED){ 
       
       // 1. REPLACE LOCALHOST IN THE STRING BELOW WITH THE IP ADDRESS OF THE COMPUTER THAT YOUR BACKEND IS RUNNING ON
-      http.begin(client, "http://localhost:8080/api/check/combination"); // Your Domain name with URL path or IP address with path 
+      http.begin(client, "http://192.168.0.11:8080/api/check/combination"); // Your Domain name with URL path or IP address with path 
  
       
       http.addHeader("Content-Type", "application/x-www-form-urlencoded"); // Specify content-type header      
@@ -338,3 +439,13 @@ void showLockState(void){
     
 }
  
+
+def configurePins()
+{
+  pinMode(button1,INPUT_PULLUP);
+  pinMode(button2, INPUT_PULLUP);
+  pinMode(button3, INPUT_PULLUP);
+  pinMode(AD0, INPUT);
+
+
+}
